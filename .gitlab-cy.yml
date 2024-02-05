@@ -1,0 +1,30 @@
+---
+image: debian:bullseye-slim
+
+before_script:
+  - apt-get -qq -y update
+  - apt-get -qq -y install python3 python3-pip
+  - apt-get -qq -y install git
+  - pip3 install -r requirements.txt
+
+stages:
+  - test
+  - deploy
+ 
+test_config:
+  stage: test
+  script: 
+    - python3 diff_check.py
+  rules: 
+    - when: always
+
+#needs to be manual
+deploy:
+  stage: deploy
+  needs: ["test_config"]
+  script:
+    # Execute production playbook only on master branch
+    - python3 commit_config.py
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
